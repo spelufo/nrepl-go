@@ -34,9 +34,14 @@ func connect() (*nrepl.Client, error) {
 		dir, _ := os.Getwd()
 		a, err := nrepl.FindPortFile(dir)
 		if err != nil {
-			return nil, err
+			host := flagHost
+			if host == "" {
+				host = "localhost"
+			}
+			addr = host + ":7888"
+		} else {
+			addr = a
 		}
-		addr = a
 	}
 	conn, err := nrepl.Dial(addr)
 	if err != nil {
