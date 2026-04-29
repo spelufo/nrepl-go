@@ -207,7 +207,13 @@ func (c *Client) LsSessions() ([]string, error) {
 // Close closes the client session and connection.
 func (c *Client) Close() error {
 	if c.session != "" {
-		c.conn.Send(Message{"op": "close", "session": c.session})
+		// Send close and wait for the server's response before closing the
+		// TCP connection, otherwise the server gets a SocketException.
+		ch, err := c.Send("close", nil)
+		if err == nil {
+			for range ch {
+			}
+		}
 	}
 	err := c.conn.Close()
 	<-c.done

@@ -42,3 +42,10 @@
 - [x] `nrepl describe`
 - [x] `nrepl completions <prefix>`
 - [x] `nrepl repl` (interactive loop)
+
+## Phase 6: Iron out the bugs
+
+- [x] Running `nrepl eval '(+ 2 3)'` works but the clojure repl throws:
+      ```ERROR: Unhandled REPL handler exception processing message {:op close, :session d31ffe51-b15f-467e-a775-9fc095116d91}
+java.net.SocketException: Socket closed```
+      We must handle the close message before exiting.
