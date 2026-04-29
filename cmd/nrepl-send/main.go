@@ -1,10 +1,9 @@
 package main
 
 import (
-	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 
 	nrepl "github.com/spelufo/nrepl-go"
 	"github.com/spf13/cobra"
@@ -14,6 +13,7 @@ var (
 	flagHost     string
 	flagPort     string
 	flagPortFile string
+	flagNS       string
 )
 
 func connect() (*nrepl.Client, error) {
@@ -62,6 +62,28 @@ func printResponses(ch <-chan nrepl.Response) {
 	}
 }
 
+// convertBytes recursively converts []byte values to strings for JSON output.
+func convertBytes(v any) any {
+	switch val := v.(type) {
+	case []byte:
+		return string(val)
+	case map[string]any:
+		m := make(map[string]any, len(val))
+		for k, v := range val {
+			m[k] = convertBytes(v)
+		}
+		return m
+	case []any:
+		s := make([]any, len(val))
+		for i, v := range val {
+			s[i] = convertBytes(v)
+		}
+		return s
+	default:
+		return v
+	}
+}
+
 var rootCmd = &cobra.Command{
 	Use:   "nrepl",
 	Short: "nREPL command-line client",
@@ -77,7 +99,12 @@ var evalCmd = &cobra.Command{
 			return err
 		}
 		defer client.Close()
-		ch, err := client.Eval(args[0])
+		ch, err := func() (<-chan nrepl.Response, error) {
+			if flagNS != "" {
+				return client.EvalIn(args[0], flagNS)
+			}
+			return client.Eval(args[0])
+		}()
 		if err != nil {
 			return err
 		}
@@ -100,9 +127,11 @@ var describeCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		for k, v := range resp.Msg {
-			fmt.Printf("%s: %v\n", k, v)
+		data, err := json.MarshalIndent(convertBytes(map[string]any(resp.Msg)), "", "  ")
+		if err != nil {
+			return err
 		}
+		fmt.Println(string(data))
 		return nil
 	},
 }
@@ -141,44 +170,13 @@ var completionsCmd = &cobra.Command{
 	},
 }
 
-var replCmd = &cobra.Command{
-	Use:   "repl",
-	Short: "Interactive nREPL session",
-	Args:  cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		client, err := connect()
-		if err != nil {
-			return err
-		}
-		defer client.Close()
-
-		scanner := bufio.NewScanner(os.Stdin)
-		fmt.Print("user=> ")
-		for scanner.Scan() {
-			line := strings.TrimSpace(scanner.Text())
-			if line == "" {
-				fmt.Print("user=> ")
-				continue
-			}
-			ch, err := client.Eval(line)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-				break
-			}
-			printResponses(ch)
-			fmt.Print("user=> ")
-		}
-		fmt.Println()
-		return scanner.Err()
-	},
-}
-
 func main() {
 	rootCmd.PersistentFlags().StringVar(&flagHost, "host", "", "nREPL host (default localhost)")
 	rootCmd.PersistentFlags().StringVar(&flagPort, "port", "", "nREPL port")
 	rootCmd.PersistentFlags().StringVar(&flagPortFile, "port-file", "", "path to .nrepl-port file")
 
-	rootCmd.AddCommand(evalCmd, describeCmd, completionsCmd, replCmd)
+	evalCmd.Flags().StringVarP(&flagNS, "namespace", "n", "", "namespace to evaluate in")
+	rootCmd.AddCommand(evalCmd, describeCmd, completionsCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

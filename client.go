@@ -130,6 +130,11 @@ func (c *Client) Eval(code string) (<-chan Response, error) {
 	return c.Send("eval", Message{"code": code})
 }
 
+// EvalIn sends code for evaluation in the given namespace. Returns a channel of responses.
+func (c *Client) EvalIn(code, ns string) (<-chan Response, error) {
+	return c.Send("eval", Message{"code": code, "ns": ns})
+}
+
 // Clone creates a new session, returning its ID.
 func (c *Client) Clone() (string, error) {
 	id := c.genID()
