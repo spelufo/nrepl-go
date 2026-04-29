@@ -22,18 +22,23 @@
 
 ## Phase 3: Client (multiplexed)
 
-- [ ] Background recv loop + per-id dispatch
-- [ ] `Send` — id generation, channel registration
-- [ ] `Clone` / `Close` session management
-- [ ] `Eval` — stream responses until done
-- [ ] `Describe`, `Completions`, `Lookup`, `Interrupt`, `LsSessions`
-- [ ] Integration test: eval round-trip
-- [ ] Integration test: concurrent evals
+- [x] Background recv loop + per-id dispatch
+- [x] `Send` — id generation, channel registration
+- [x] `Clone` / `Close` session management
+- [x] `Eval` — stream responses until done
+- [x] `Describe`, `Completions`, `Lookup`, `Interrupt`, `LsSessions`
+- [x] Integration test: eval round-trip
+- [x] Integration test: concurrent evals
 
-## Phase 4: CLI
+## Phase 4: Document the client library
 
-- [ ] Cobra scaffold + global flags (`--host`, `--port`, `--port-file`)
-- [ ] `nrepl eval <code>`
-- [ ] `nrepl describe`
-- [ ] `nrepl completions <prefix>`
-- [ ] `nrepl repl` (interactive loop)
+- [x] Write README.md with installation, quick start, API reference, and examples
+
+
+## Phase 5: CLI
+
+- [x] Cobra scaffold + global flags (`--host`, `--port`, `--port-file`)
+- [x] `nrepl eval <code>`
+- [x] `nrepl describe`
+- [x] `nrepl completions <prefix>`
+- [x] `nrepl repl` (interactive loop)
