@@ -1,3 +1,4 @@
 /references/nrepl
 .clj-kondo
 .lsp
+!/.pi
